@@ -5,10 +5,12 @@ interface DetailLaporanModalProps {
   isOpen: boolean;
   onClose: () => void;
   data: any;
-  isAdmin?: boolean; // tambahkan props isAdmin
-  onUpdateStatus?: (newStatus: string) => void; // callback untuk update status
-  onEdit?: () => void; // callback tombol edit
+  isAdmin?: boolean;
+  onUpdateStatus?: (newStatus: string) => void;
+  onEdit?: () => void;
+  onUpdateKategori?: (newKategori: string) => void;
 }
+
 
 export default function DetailLaporanModal({
   isOpen,
@@ -17,8 +19,10 @@ export default function DetailLaporanModal({
   isAdmin = false,
   onUpdateStatus,
   onEdit,
+  onUpdateKategori,
 }: DetailLaporanModalProps) {
   const [status, setStatus] = useState(data?.status || "");
+  const [kategori, setKategori] = useState(data?.kategori || "");
 
   if (!data) return null;
 
@@ -28,6 +32,10 @@ export default function DetailLaporanModal({
 
   const handleUpdate = () => {
     if (onUpdateStatus) onUpdateStatus(status);
+  };
+
+  const handleKategoriUpdate = () => {
+    if (onUpdateKategori) onUpdateKategori(kategori);
   };
 
   return (
@@ -60,8 +68,10 @@ export default function DetailLaporanModal({
             className="border-t border-gray-300 mt-4 pt-4 space-y-3"
             onSubmit={(e) => {
               e.preventDefault();
-              handleUpdate(); 
-            }}>
+              handleUpdate();
+            }}
+          >
+            {/* Update Status */}
             <div className="flex items-center gap-2">
               <label className="font-semibold text-gray-700">
                 Update Status:
@@ -69,22 +79,45 @@ export default function DetailLaporanModal({
               <select
                 className="border border-gray-300 rounded px-2 py-1"
                 value={status}
-                onChange={handleStatusChange}>
+                onChange={handleStatusChange}
+              >
                 <option value="Proses">Proses</option>
                 <option value="Selesai">Selesai</option>
               </select>
               <button
-                type="submit" // tombol ini sekarang submit form
-                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                type="submit"
+                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+              >
                 Set
               </button>
             </div>
 
+            {/* Override kategori */}
+            <div className="grid grid-cols-2 gap-2">
+              <label className="font-semibold text-gray-700">
+                Kategori Prediksi:
+              </label>
+              <input
+                className="border border-gray-300 rounded px-2 py-1"
+                value={kategori}
+                onChange={(e) => setKategori(e.target.value)}
+              />
+            </div>
+
+            <button
+              type="button"
+              className="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600"
+              onClick={handleKategoriUpdate}
+            >
+              Simpan Kategori
+            </button>
+
             {onEdit && (
               <button
-                type="button" // tombol edit tidak submit
+                type="button"
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                onClick={onEdit}>
+                onClick={onEdit}
+              >
                 Edit Laporan
               </button>
             )}

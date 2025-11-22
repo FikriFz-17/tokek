@@ -5,7 +5,7 @@ export default function Topbar() {
     <div className="w-full flex justify-end items-center p-4">
       <div className="flex items-center gap-2 cursor-pointer">
         <User size={22} />
-        <span className="font-medium">Yoru Sora</span>
+        <span className="font-medium">Orang Gila</span>
       </div>
     </div>
   );
