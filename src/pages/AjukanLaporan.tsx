@@ -1,35 +1,58 @@
+// src/pages/AjukanLaporan.tsx
 import {
   User,
   Building,
-  Calendar,
+  Calendar as CalendarIcon, // Rename icon agar tidak bentrok dengan komponen Calendar
   AlertTriangle,
-  Menu,
+  AlignLeft,
   Send,
   RotateCcw,
 } from "lucide-react";
 import { useState } from "react";
-import { classifyText, createTicket } from "../api"; // <-- Dari form baru
+import { classifyText, createTicket } from "../api";
+
+// Import komponen shadcn & date-fns
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import Header from "@/components/Header";
 
 export default function AjukanLaporan() {
-  // --- State dari form baru ---
   const [form, setForm] = useState({
     nama: "",
     instansi: "",
-    tanggal: "",
+    tanggal: "", // Disimpan sebagai string "YYYY-MM-DD"
     masalah: "",
     deskripsi: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [predKategori, setPredKategori] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  
+  // State khusus untuk kontrol popover (opsional, biar nutup pas pilih)
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // --- Handler dari form baru ---
+  // Handler input teks biasa
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Handler khusus untuk Date Picker
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      // Format ke YYYY-MM-DD agar konsisten dengan backend / state sebelumnya
+      setForm({ ...form, tanggal: format(date, "yyyy-MM-dd") });
+      setIsCalendarOpen(false); // Tutup popover setelah memilih
+    }
   };
 
   const handleReset = () => {
@@ -40,7 +63,6 @@ export default function AjukanLaporan() {
       masalah: "",
       deskripsi: "",
     });
-    setPredKategori(null);
     setSuccessMsg(null);
     setError(null);
   };
@@ -49,17 +71,12 @@ export default function AjukanLaporan() {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
-    setPredKategori(null);
     setIsLoading(true);
 
     try {
-      // 1) Gabungkan text untuk prediksi
       const textForPred = `${form.masalah}. ${form.deskripsi}`;
       const pred = await classifyText(textForPred);
 
-      setPredKategori(pred.category);
-
-      // 2) Simpan tiket ke backend
       const payload = {
         ...form,
         category: pred.category,
@@ -67,143 +84,164 @@ export default function AjukanLaporan() {
 
       const saved = await createTicket(payload);
 
-      setSuccessMsg(`Tiket berhasil disimpan! ID: ${saved.id}`);
-      handleReset(); // Gunakan handleReset yang sudah diupdate
+      setSuccessMsg(`Laporan berhasil dikirim! ID Tiket: #${saved.id}`);
+      handleReset();
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "Terjadi kesalahan");
+      setError(err.message || "Terjadi kesalahan saat mengirim laporan.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // --- JSX/UI dari form lama ---
   return (
-    <div className="max-w-8xl mx-auto p-8 bg-white rounded-lg shadow-xl">
-      <h2 className="text-2xl font-bold text-gray-800 mb-8">
-        Ajukan Laporan Permasalahan
-      </h2>
+    <div className="min-h-screen p-8 font-sans">
+      {/* Header Section */}
+      <Header 
+        title="Ajukan Laporan Permasalahan" 
+        subtitle="Sampaikan kendala anda disini" 
+      />
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* --- Bagian Informasi Dasar (Grid 3 Kolom) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Nama */}
-          <div>
-            <label className="flex items-center text-sm font-semibold text-gray-700 mb-1">
-              <User size={16} className="mr-2" /> Nama
+      {/* Card Form */}
+      <div className="bg-white rounded-2xl shadow-sm p-8 md:p-10">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Row 1: Nama, Jenis Keanggotaan, Tanggal */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Nama */}
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center text-sm font-medium text-gray-700">
+                <User size={18} className="mr-2 text-gray-500" /> Nama
+              </label>
+              <input
+                type="text"
+                name="nama"
+                value={form.nama}
+                onChange={handleChange}
+                className="w-full border-b border-gray-300 py-2 text-gray-800 outline-none focus:border-[#E74C3C] transition-colors bg-transparent placeholder-gray-300"
+                placeholder="Masukkan nama anda"
+                required
+              />
+            </div>
+
+            {/* Jenis Keanggotaan */}
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center text-sm font-medium text-gray-700">
+                <Building size={18} className="mr-2 text-gray-500" /> Jenis
+                Keanggotaan
+              </label>
+              <input
+                type="text"
+                name="instansi"
+                value={form.instansi}
+                onChange={handleChange}
+                className="w-full border-b border-gray-300 py-2 text-gray-800 outline-none focus:border-[#E74C3C] transition-colors bg-transparent placeholder-gray-300"
+                placeholder="Mahasiswa / Dosen / Staff"
+                required
+              />
+            </div>
+
+            {/* Tanggal Pengajuan (Shadcn Date Picker) */}
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center text-sm font-medium text-gray-700">
+                <CalendarIcon size={18} className="mr-2 text-gray-500" /> Tanggal
+                Pengajuan
+              </label>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"ghost"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal border-b border-gray-300 rounded-none px-0 py-2 h-auto hover:bg-transparent shadow-none text-gray-800",
+                      !form.tanggal && "text-gray-400"
+                    )}
+                  >
+                    {form.tanggal ? (
+                      format(new Date(form.tanggal), "PPP")
+                    ) : (
+                      <span>Pilih tanggal</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={form.tanggal ? new Date(form.tanggal) : undefined}
+                    onSelect={handleDateSelect}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+
+          {/* Row 2: Permasalahan */}
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center text-sm font-medium text-gray-700">
+              <AlertTriangle size={18} className="mr-2 text-gray-500" />{" "}
+              Permasalahan
             </label>
             <input
               type="text"
-              name="nama" // <-- Diperlukan untuk handleChange
-              value={form.nama}
-              onChange={handleChange} // <-- Gunakan handler terpadu
-              className="w-full border-b border-gray-300 pb-1 outline-none focus:border-red-500 transition"
-              required
-            />
-          </div>
-
-          {/* Jenis Keanggotaan */}
-          <div>
-            <label className="flex items-center text-sm font-semibold text-gray-700 mb-1">
-              <Building size={16} className="mr-2" /> Jenis Keanggotaan
-            </label>
-            <input
-              type="text"
-              name="instansi" // <-- Diperlukan untuk handleChange
-              value={form.instansi}
+              name="masalah"
+              value={form.masalah}
               onChange={handleChange}
-              className="w-full border-b border-gray-300 pb-1 outline-none focus:border-red-500 transition"
+              className="w-full border-b border-gray-300 py-2 text-gray-800 outline-none focus:border-[#E74C3C] transition-colors bg-transparent placeholder-gray-300"
+              placeholder="Tuliskan inti permasalahan"
               required
             />
           </div>
 
-          {/* Tanggal */}
-          <div className="relative">
-            <label className="flex items-center text-sm font-semibold text-gray-700 mb-1">
-              <Calendar size={16} className="mr-2" /> Tanggal Pengajuan
+          {/* Row 3: Deskripsi */}
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center text-sm font-medium text-gray-700">
+              <AlignLeft size={18} className="mr-2 text-gray-500" /> Deskripsi
             </label>
-            <input
-              type="date"
-              name="tanggal" // <-- Diperlukan untuk handleChange
-              value={form.tanggal}
+            <textarea
+              name="deskripsi"
+              value={form.deskripsi}
               onChange={handleChange}
-              className="w-full border-b border-gray-300 pb-1 outline-none focus:border-red-500 transition"
+              rows={6}
+              className="w-full border border-gray-300 rounded-lg p-4 text-gray-800 outline-none focus:border-[#E74C3C] focus:ring-1 focus:ring-[#E74C3C] transition-all resize-none placeholder-gray-300"
+              placeholder="Jelaskan detail kendala yang anda alami..."
               required
             />
           </div>
-        </div>
 
-        {/* Permasalahan */}
-        <div>
-          <label className="flex items-center text-sm font-semibold text-gray-700 mb-1">
-            <AlertTriangle size={16} className="mr-2" /> Permasalahan
-          </label>
-          <input
-            type="text"
-            name="masalah" // <-- Diperlukan untuk handleChange
-            value={form.masalah}
-            onChange={handleChange}
-            placeholder="Judul atau topik permasalahan"
-            className="w-full border-b border-gray-300 pb-1 outline-none focus:border-red-500 transition"
-            required
-          />
-        </div>
-
-        {/* Deskripsi */}
-        <div>
-          <label className="flex items-center text-sm font-semibold text-gray-700 mb-1">
-            <Menu size={16} className="mr-2" /> Deskripsi
-          </label>
-          <textarea
-            name="deskripsi" // <-- Diperlukan untuk handleChange
-            value={form.deskripsi}
-            onChange={handleChange}
-            placeholder="Jelaskan permasalahan secara detail..."
-            rows={5}
-            className="w-full border border-gray-300 p-3 rounded-lg outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition resize-none"
-            required
-          />
-        </div>
-
-        <div className="space-y-3">
-
-          {/* SUCCESS */}
+          {/* Messages */}
           {successMsg && (
-            <div className="p-3 bg-green-100 text-green-700 rounded-lg">
+            <div className="p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
               {successMsg}
             </div>
           )}
-
-          {/* ERROR */}
           {error && (
-            <div className="p-3 bg-red-100 text-red-700 rounded-lg">
+            <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
               {error}
             </div>
           )}
-        </div>
 
-        {/* Tombol */}
-        <div className="flex gap-4 pt-4">
-          <button
-            type="submit"
-            disabled={isLoading} // <-- Dari form baru
-            className="flex items-center px-6 py-3 bg-red-700 hover:bg-red-800 text-white rounded-lg font-semibold shadow-md shadow-red-300 transition disabled:bg-red-400"
-          >
-            <Send size={18} className="mr-2" />
-            {isLoading ? "Memproses..." : "Ajukan Laporan"}
-          </button>
+          {/* Buttons */}
+          <div className="flex gap-4 pt-2">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex items-center gap-2 bg-[#E74C3C] hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium shadow-sm transition-colors disabled:opacity-50"
+            >
+              <Send size={18} />
+              {isLoading ? "Mengirim..." : "Ajukan Laporan"}
+            </button>
 
-          <button
-            type="button"
-            onClick={handleReset} // <-- Menggunakan handler baru
-            disabled={isLoading} // <-- Nonaktifkan saat loading
-            className="flex items-center px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold shadow-md transition disabled:bg-gray-300"
-          >
-            <RotateCcw size={18} className="mr-2" />
-            Reset Form
-          </button>
-        </div>
-      </form>
+            <button
+              type="button"
+              onClick={handleReset}
+              disabled={isLoading}
+              className="flex items-center gap-2 bg-white border border-[#E74C3C] text-[#E74C3C] hover:bg-red-50 px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50"
+            >
+              <RotateCcw size={18} />
+              Reset Form
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

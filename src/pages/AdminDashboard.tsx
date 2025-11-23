@@ -4,9 +4,10 @@ import StatsCard from "../components/StatsCard";
 import SearchBar from "../components/SearchBar";
 import DataTable from "../components/DataTable";
 import DetailLaporanModal from "../components/DetailLaporanModal";
-import { CheckCircle, AlertTriangle, Megaphone } from "lucide-react";
+import { CheckCircle, AlertTriangle, Megaphone, Check, AlertCircle } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { getTickets, updateTicketCategory, updateTicketStatus } from "../api";
+import Header from "@/components/Header";
 
 interface Ticket {
   id: number;
@@ -31,7 +32,6 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const data = await getTickets();
-      // data di-return oleh backend sebagai array langsung
       setTickets(data);
     } catch (err) {
       console.error("Gagal fetch tickets:", err);
@@ -49,12 +49,10 @@ export default function AdminDashboard() {
     setIsOpen(true);
   };
 
-  // Callback untuk update kategori dari modal
   const handleUpdateKategori = async (newKategori: string) => {
     if (!selectedData) return;
     try {
-      const updated = await updateTicketCategory(selectedData.id, newKategori);
-      // refresh lokal -> atau panggil fetchData() lagi
+      await updateTicketCategory(selectedData.id, newKategori);
       await fetchData();
       setIsOpen(false);
     } catch (err) {
@@ -62,11 +60,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Callback untuk update status dari modal
   const handleUpdateStatus = async (newStatus: string) => {
     if (!selectedData) return;
     try {
-      const updated = await updateTicketStatus(selectedData.id, newStatus);
+      await updateTicketStatus(selectedData.id, newStatus);
       await fetchData();
       setIsOpen(false);
     } catch (err) {
@@ -74,37 +71,45 @@ export default function AdminDashboard() {
     }
   };
 
+  // Helper filters
+  const doneCount = tickets.filter(t => (t.status ?? "").toLowerCase() === "selesai" || (t.status ?? "").toLowerCase() === "done").length;
+  const processCount = tickets.filter(t => (t.status ?? "").toLowerCase() === "proses" || (t.status ?? "").toLowerCase() === "progress").length;
+  const openCount = tickets.filter(t => (t.status || "").toLowerCase() === "pengajuan").length || 0;
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 min-h-screen">
+      <Header 
+        title="Admin Dashboard" 
+        subtitle="Kelola tiket dan status laporan masuk" 
+      />
+
+
       {/* Stats Section */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <StatsCard
-          count={tickets.filter(t => (t.status ?? "Pengajuan").toLowerCase() === "selesai" || (t.status ?? "").toLowerCase() === "done").length}
+          count={doneCount}
           label="Selesai"
-          color="bg-green-500"
-          icon={<CheckCircle />}
+          variant="green"
+          icon="/ceklis.svg" // Ikon Check besar
         />
         <StatsCard
-          count={tickets.filter(t => (t.status ?? "").toLowerCase() === "proses" || (t.status ?? "").toLowerCase() === "progress").length}
-          label="Progress"
-          color="bg-yellow-500"
-          icon={<AlertTriangle />}
+          count={processCount}
+          label="In-Progress"
+          variant="yellow"
+          icon="/tandaseru.svg" // Ikon Tanda Seru besar
         />
         <StatsCard
-          count={tickets.filter(t => (t.status ?? "").toLowerCase() === "pengajuan" || (t.status ?? "").toLowerCase() === "pending").length}
-          label="Pengajuan"
-          color="bg-red-500"
-          icon={<Megaphone />}
+          count={openCount}
+          label="Open"
+          variant="red"
+          icon="/megaphone.svg"  // Ikon Megaphone besar
         />
       </div>
 
-      {/* Search & Filters */}
       <SearchBar />
 
-      {/* Table - kirim handleView ke DataTable */}
       <DataTable data={tickets} loading={loading} onView={handleView} isAdmin={isAdmin} />
 
-      {/* Modal Detail */}
       <DetailLaporanModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
