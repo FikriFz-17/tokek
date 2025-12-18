@@ -49,3 +49,37 @@ export async function updateTicketStatus(id: number, status: string) {
   if (!res.ok) throw new Error("Gagal update status");
   return res.json();
 }
+
+export async function loginUser(identifier: string, password: string) {
+  // Backend mengharapkan field "identifier" (bukan username)
+  const res = await fetch(`${API_BASE}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifier, password }),
+    credentials: "include", // PENTING: Izinkan set-cookie dari backend
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Gagal login");
+  }
+  return res.json();
+}
+
+export async function logoutUser() {
+  const res = await fetch(`${API_BASE}/logout`, {
+    method: "POST",
+    credentials: "include", // Kirim cookie saat logout agar backend bisa menghapusnya
+  });
+  if (!res.ok) throw new Error("Gagal logout");
+  return res.json();
+}
+
+export async function getCurrentUser() {
+  const res = await fetch(`${API_BASE}/users/me`, {
+    method: "GET",
+    credentials: "include", // Kirim cookie untuk validasi session
+  });
+  if (!res.ok) return null; // Jika 401 Unauthorized, anggap belum login
+  return res.json();
+}

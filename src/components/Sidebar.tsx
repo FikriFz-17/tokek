@@ -33,8 +33,8 @@ export default function Sidebar({ isaAdmin = false }: SidebarProps) {
         <SidebarItem
           icon={<LayoutDashboard size={20} />}
           label="Dashboard"
-          to={isaAdmin ? "/admin-dashboard" : "/"}
-          active={pathname === "/" || pathname === "/admin-dashboard"}
+          to={isaAdmin ? "/admin-dashboard" : "/dashboard"}
+          active={pathname === "/dashboard" || pathname === "/admin-dashboard"}
         />
 
         {/* HANYA MUNCUL JIKA BUKAN ADMIN */}
