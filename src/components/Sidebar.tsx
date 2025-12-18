@@ -1,6 +1,7 @@
 // src/components/Sidebar.tsx
 import { LayoutDashboard, BookOpen, Headphones, PlusCircle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 interface SidebarProps {
   isaAdmin?: boolean;
@@ -8,6 +9,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isaAdmin = false }: SidebarProps) {
   const { pathname } = useLocation();
+  const { logout } = useAuth();
 
   return (
     <div className="w-64 bg-[#E74C3C] text-white flex flex-col h-screen font-sans">
@@ -60,6 +62,13 @@ export default function Sidebar({ isaAdmin = false }: SidebarProps) {
           active={pathname === "/customer-service"}
         />
       </nav>
+
+      <button 
+        onClick={logout} 
+        className="mt-auto w-full rounded-md bg-red-900 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 transition-colors"
+      >
+        Logout
+      </button>
 
       {/* Footer */}
       <div className="pb-6 text-center text-xs text-white/70">

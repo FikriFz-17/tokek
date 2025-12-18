@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Opsional: Jika user sudah login tapi buka halaman login, redirect otomatis
         if (location.pathname === "/login") {
-          if (data.role === "super admin") {
+          if (data.role === "admin") {
             navigate("/admin-dashboard");
           } else {
             navigate("/dashboard");
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
     
     // === LOGIKA REDIRECT BERDASARKAN ROLE ===
-    if (userData.role === "super admin") {
+    if (userData.role === "admin") {
       navigate("/admin-dashboard");
     } else {
       navigate("/dashboard");
