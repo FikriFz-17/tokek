@@ -34,7 +34,7 @@ const Login: React.FC = () => {
       login({
         identifier: data.identifier,
         role: data.role,
-        nama_lengkap: data.identifier // Gunakan identifier jika nama belum tersedia
+        nama_lengkap: data.nama_lengkap // Gunakan identifier jika nama belum tersedia
       });
 
     } catch (err: any) {
