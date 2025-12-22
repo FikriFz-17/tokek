@@ -86,11 +86,13 @@ export default function Sidebar({ isaAdmin = false }: SidebarProps) {
         <SidebarItem
           icon={<BookOpen size={20} />}
           label="User Manual"
+          to="/user-manual" 
           active={pathname === "/user-manual"}
         />
         <SidebarItem
           icon={<Headphones size={20} />}
           label="Customer Service"
+          to="/customer-service" 
           active={pathname === "/customer-service"}
         />
       </nav>

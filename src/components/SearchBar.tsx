@@ -1,143 +1,105 @@
-import { useState } from "react";
-import { Search, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format, subDays } from "date-fns";
-import { cn } from "@/lib/utils";
+// src/components/SearchBar.tsx
+import { Search, RotateCcw } from "lucide-react";
 
-export default function SearchBar() {
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: undefined,
-    to: undefined,
-  });
+interface SearchBarProps {
+  searchText: string;
+  onSearchChange: (value: string) => void;
+  
+  statusFilter: string;
+  onStatusChange: (value: string) => void;
+  
+  startDate: string;
+  onStartDateChange: (value: string) => void;
+  
+  endDate: string;
+  onEndDateChange: (value: string) => void;
+  
+  onReset: () => void;
+  placeholder?: string;
+}
 
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  // Fungsi untuk tombol preset (Hari Ini, 7 Hari, 30 Hari)
-  const handlePreset = (days: number) => {
-    const today = new Date();
-    if (days === 0) {
-      setDateRange({ from: today, to: today });
-    } else {
-      setDateRange({ from: subDays(today, days), to: today });
-    }
-  };
-
-  const handleReset = () => {
-    setDateRange({ from: undefined, to: undefined });
-  };
+export default function SearchBar({ 
+  searchText, 
+  onSearchChange, 
+  statusFilter,
+  onStatusChange,
+  startDate,
+  onStartDateChange,
+  endDate,
+  onEndDateChange,
+  onReset,
+  placeholder = "Cari berdasarkan masalah, resi..." 
+}: SearchBarProps) {
+  
+  // Style dasar yang sama persis dengan input sebelumnya agar konsisten
+  const baseInputStyle = "border border-gray-200 rounded-xl bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E74C3C] focus:border-[#E74C3C] text-sm transition-all shadow-sm h-[46px]";
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-      {/* Search Input */}
-      <div className="relative w-full md:w-[400px]">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
+    <div className="flex flex-col md:flex-row gap-4 mb-6">
+      
+      {/* 1. Kolom Pencarian (Paling Lebar) */}
+      <div className="relative flex-1">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search className="text-gray-400" size={20} />
+        </div>
+        <input
           type="text"
-          placeholder="Cari laporan berdasarkan No. Resi atau Masalah"
-          className="pl-11 h-12 rounded-xl border-none shadow-sm bg-white text-sm"
+          value={searchText}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className={`block w-full pl-10 pr-3 py-3 ${baseInputStyle}`}
+          placeholder={placeholder}
         />
       </div>
 
-      {/* Filters Right */}
-      <div className="flex gap-3 w-full md:w-auto">
-        
-        {/* --- POPOVER PERIODE TANGGAL (Sesuai Gambar) --- */}
-        <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-          <PopoverTrigger asChild>
-            <button className={cn(
-                "flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl text-sm text-gray-600 shadow-sm font-medium hover:bg-gray-50 transition-colors",
-                (dateRange.from || dateRange.to) && "text-black ring-1 ring-gray-200"
-              )}>
-              <span>
-                {dateRange.from 
-                  ? `${format(dateRange.from, "dd/MM/yyyy")} - ${dateRange.to ? format(dateRange.to, "dd/MM/yyyy") : "..."}`
-                  : "Pilih Periode"}
-              </span>
-              <CalendarIcon size={16} />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[340px] p-5 rounded-xl shadow-xl border-gray-100" align="end">
-            <div className="space-y-4">
-              <h4 className="font-bold text-gray-900 text-sm">Periode Tanggal</h4>
-              
-              {/* Input Tanggal Dari - Sampai */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs text-gray-500 font-medium ml-1">Dari</label>
-                  <div className="relative">
-                    <input 
-                      type="date" 
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:border-blue-500 transition-colors bg-white cursor-pointer"
-                      value={dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : ""}
-                      onChange={(e) => setDateRange(prev => ({...prev, from: e.target.value ? new Date(e.target.value) : undefined}))}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs text-gray-500 font-medium ml-1">Sampai</label>
-                  <div className="relative">
-                     <input 
-                      type="date" 
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none focus:border-blue-500 transition-colors bg-white cursor-pointer"
-                      value={dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : ""}
-                      onChange={(e) => setDateRange(prev => ({...prev, to: e.target.value ? new Date(e.target.value) : undefined}))}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Tombol Preset Warna-warni */}
-              <div className="flex flex-wrap gap-2">
-                <button 
-                  onClick={() => handlePreset(0)}
-                  className="px-3 py-1.5 rounded-md bg-blue-50 text-blue-600 text-xs font-semibold hover:bg-blue-100 transition-colors"
-                >
-                  Hari Ini
-                </button>
-                <button 
-                   onClick={() => handlePreset(7)}
-                   className="px-3 py-1.5 rounded-md bg-green-50 text-green-600 text-xs font-semibold hover:bg-green-100 transition-colors"
-                >
-                  7 Hari
-                </button>
-                <button 
-                   onClick={() => handlePreset(30)}
-                   className="px-3 py-1.5 rounded-md bg-purple-50 text-purple-600 text-xs font-semibold hover:bg-purple-100 transition-colors"
-                >
-                  30 Hari
-                </button>
-              </div>
-
-              {/* Tombol Reset di Kanan Bawah */}
-              <div className="flex justify-end pt-2">
-                 <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleReset}
-                    className="text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 h-8 px-4 rounded-lg font-medium"
-                 >
-                    Reset
-                 </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        {/* Status Dropdown (Placeholder) */}
-        <button className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl text-sm text-gray-600 shadow-sm font-medium hover:bg-gray-50">
-          <span>Semua Status</span>
-          <ChevronDown size={16} />
-        </button>
+      {/* 2. Filter Status */}
+      <div className="w-full md:w-48">
+        <select
+          value={statusFilter}
+          onChange={(e) => onStatusChange(e.target.value)}
+          className={`w-full px-3 py-2 appearance-none ${baseInputStyle}`}
+          style={{ backgroundImage: 'none' }} // Hilangkan panah default browser jika ingin custom, tapi biarkan standard agar UX familiar
+        >
+          <option value="">Semua Status</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Proses">In-Progress</option>
+          <option value="Pengajuan">Open / Pengajuan</option>
+        </select>
       </div>
+
+      {/* 3. Filter Tanggal (Start - End) */}
+      <div className="flex gap-2 w-full md:w-auto">
+        <div className="relative">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => onStartDateChange(e.target.value)}
+            className={`w-full md:w-40 px-3 py-2 ${baseInputStyle} text-gray-600`}
+            placeholder="Dari Tanggal"
+          />
+        </div>
+        
+        <div className="relative">
+           <input
+            type="date"
+            value={endDate}
+            onChange={(e) => onEndDateChange(e.target.value)}
+            className={`w-full md:w-40 px-3 py-2 ${baseInputStyle} text-gray-600`}
+            placeholder="Sampai Tanggal"
+          />
+        </div>
+      </div>
+
+      {/* 4. Tombol Reset (Muncul jika ada filter) */}
+      {(searchText || statusFilter || startDate || endDate) && (
+        <button
+          onClick={onReset}
+          className="flex items-center justify-center gap-2 px-4 h-[46px] text-red-600 bg-white border border-red-100 hover:bg-red-50 rounded-xl text-sm font-medium transition-colors shadow-sm whitespace-nowrap"
+          title="Reset Filter"
+        >
+          <RotateCcw size={18} />
+          <span className="md:hidden lg:inline">Reset</span>
+        </button>
+      )}
     </div>
   );
 }
