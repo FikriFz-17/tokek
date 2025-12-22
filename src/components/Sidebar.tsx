@@ -1,4 +1,3 @@
-// src/components/Sidebar.tsx
 import { useState } from "react";
 import { LayoutDashboard, BookOpen, Headphones, PlusCircle, LogOut, ChevronDown, ChevronUp } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -11,17 +10,21 @@ interface SidebarProps {
 export default function Sidebar({ isaAdmin = false }: SidebarProps) {
   const { pathname } = useLocation();
   const { logout, user } = useAuth();
-  const [isProfileOpen, setIsProfileOpen] = useState(false); // State untuk toggle menu
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   // Tentukan apakah user adalah admin
   const isUserAdmin = user?.role === "admin" || isaAdmin;
-  const displayName = user?.nama_lengkap || "Pengguna";
+  
+  // LOGIKA DINAMIS: Prioritaskan Nama Lengkap -> Identifier (Username) -> "Pengguna"
+  const displayName = user?.nama_lengkap || user?.identifier || "Pengguna";
+  
+  // Avatar otomatis digenerate berdasarkan displayName (Seed)
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName)}`;
 
   return (
     <div className="w-64 bg-[#E74C3C] text-white flex flex-col h-screen font-sans">
       
-      {/* Profil Section - Klik untuk Toggle */}
+      {/* Profil Section - Dinamis sesuai User Login */}
       <div 
         className="flex flex-col items-center pt-8 pb-4 cursor-pointer hover:bg-white/5 transition-colors duration-200"
         onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -38,29 +41,27 @@ export default function Sidebar({ isaAdmin = false }: SidebarProps) {
           <h2 className="text-xl font-bold tracking-wide text-center break-words select-none">
             {displayName}
           </h2>
-          {/* Ikon Panah Kecil */}
           {isProfileOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </div>
         
         <p className="text-xs text-white/70 uppercase tracking-wider mt-1 select-none">
-          {user?.role}
+          {user?.role || "Guest"}
         </p>
       </div>
 
-      {/* Menu Logout (Muncul jika isProfileOpen = true) */}
+      {/* Menu Logout */}
       <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isProfileOpen ? "max-h-20 opacity-100 mb-4" : "max-h-0 opacity-0"}`}>
         <div className="px-4">
           <SidebarItem 
             icon={<LogOut size={20} />} 
             label="Logout" 
-            onClick={logout} // Panggil fungsi logout
+            onClick={logout}
             active={false}
-            className="bg-red-900/50 hover:bg-red-900 border border-red-800" // Sedikit styling khusus agar terlihat sebagai 'danger' action tapi tetap senada
+            className="bg-red-900/50 hover:bg-red-900 border border-red-800"
           />
         </div>
       </div>
 
-      {/* Separator Line */}
       <div className="px-6 mb-6">
         <div className="h-[1px] bg-white/50 w-full"></div>
       </div>
@@ -97,7 +98,6 @@ export default function Sidebar({ isaAdmin = false }: SidebarProps) {
         />
       </nav>
 
-      {/* Footer */}
       <div className="pb-6 text-center text-xs text-white/70 mt-auto">
         <p>Tokek v1.0</p>
         <p>© 2025 • Kelompok Tes</p>
@@ -106,7 +106,7 @@ export default function Sidebar({ isaAdmin = false }: SidebarProps) {
   );
 }
 
-// Komponen Item Menu (Updated untuk handle Link DAN Button)
+// Komponen Item Menu
 interface SidebarItemProps {
   icon: React.ReactNode;
   label: string;
@@ -123,7 +123,6 @@ function SidebarItem({ icon, label, to, active, onClick, className = "" }: Sideb
       : "text-white hover:bg-white/10"
   } ${className}`;
 
-  // Jika ada onClick, render sebagai button
   if (onClick) {
     return (
       <button onClick={onClick} className={baseClasses}>
@@ -133,7 +132,6 @@ function SidebarItem({ icon, label, to, active, onClick, className = "" }: Sideb
     );
   }
 
-  // Default render sebagai Link
   return (
     <Link to={to || "#"} className={baseClasses}>
       {icon}
