@@ -66,7 +66,7 @@ export default function DetailLaporanModal({
           <div className="grid grid-cols-4 items-center gap-4">
             <Label className="text-right font-bold">Tanggal</Label>
             <div className="col-span-3 text-sm">
-               {data.created_at ? new Date(data.created_at).toLocaleString() : "-"}
+               {data.tanggal_pengajuan ? new Date(data.tanggal_pengajuan).toLocaleString() : "-"}
             </div>
           </div>
         </div>

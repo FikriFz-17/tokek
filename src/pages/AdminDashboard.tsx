@@ -16,6 +16,7 @@ interface Ticket {
   deskripsi?: string;
   status?: string;
   created_at?: string;
+  tanggal_pengajuan?: string;
 }
 
 export default function AdminDashboard() {
@@ -106,7 +107,7 @@ export default function AdminDashboard() {
 
     let matchDate = true;
     if (startDate || endDate) {
-      const ticketDate = item.created_at ? item.created_at.split('T')[0] : "";
+      const ticketDate = item.tanggal_pengajuan ? item.tanggal_pengajuan.split('T')[0] : "";
       if (!ticketDate) matchDate = false;
       else {
         if (startDate && ticketDate < startDate) matchDate = false;

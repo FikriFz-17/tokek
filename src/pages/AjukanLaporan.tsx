@@ -2,7 +2,7 @@
 import {
   User,
   Building,
-  Calendar as CalendarIcon, // Rename icon agar tidak bentrok dengan komponen Calendar
+  Calendar as CalendarIcon,
   AlertTriangle,
   AlignLeft,
   Send,
@@ -10,8 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { classifyText, createTicket } from "../api";
-
-// Import komponen shadcn & date-fns
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,10 +23,11 @@ import {
 import Header from "@/components/Header";
 
 export default function AjukanLaporan() {
+  // PERBAIKAN 1: Rename 'tanggal' jadi 'tanggal_pengajuan' sesuai Backend schema
   const [form, setForm] = useState({
     nama: "",
     instansi: "",
-    tanggal: "", // Disimpan sebagai string "YYYY-MM-DD"
+    tanggal_pengajuan: "", 
     masalah: "",
     deskripsi: "",
   });
@@ -36,30 +36,30 @@ export default function AjukanLaporan() {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   
-  // State khusus untuk kontrol popover (opsional, biar nutup pas pilih)
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // Handler input teks biasa
+  const navigate = useNavigate();
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handler khusus untuk Date Picker
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      // Format ke YYYY-MM-DD agar konsisten dengan backend / state sebelumnya
-      setForm({ ...form, tanggal: format(date, "yyyy-MM-dd") });
-      setIsCalendarOpen(false); // Tutup popover setelah memilih
+      // PERBAIKAN 2: Simpan ke state 'tanggal_pengajuan'
+      setForm({ ...form, tanggal_pengajuan: format(date, "yyyy-MM-dd") });
+      setIsCalendarOpen(false);
     }
   };
 
   const handleReset = () => {
+    // PERBAIKAN 3: Reset field 'tanggal_pengajuan'
     setForm({
       nama: "",
       instansi: "",
-      tanggal: "",
+      tanggal_pengajuan: "",
       masalah: "",
       deskripsi: "",
     });
@@ -77,6 +77,7 @@ export default function AjukanLaporan() {
       const textForPred = `${form.masalah}. ${form.deskripsi}`;
       const pred = await classifyText(textForPred);
 
+      // Payload sekarang otomatis sudah punya field 'tanggal_pengajuan' yang benar
       const payload = {
         ...form,
         category: pred.category,
@@ -86,6 +87,7 @@ export default function AjukanLaporan() {
 
       setSuccessMsg(`Laporan berhasil dikirim! ID Tiket: #${saved.id}`);
       handleReset();
+      navigate("/dashboard");
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Terjadi kesalahan saat mengirim laporan.");
@@ -96,16 +98,13 @@ export default function AjukanLaporan() {
 
   return (
     <div className="min-h-screen p-8 font-sans">
-      {/* Header Section */}
       <Header 
         title="Ajukan Laporan Permasalahan" 
         subtitle="Sampaikan kendala anda disini" 
       />
 
-      {/* Card Form */}
       <div className="bg-white rounded-2xl shadow-sm p-8 md:p-10">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Row 1: Nama, Jenis Keanggotaan, Tanggal */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Nama */}
             <div className="flex flex-col gap-2">
@@ -140,7 +139,7 @@ export default function AjukanLaporan() {
               />
             </div>
 
-            {/* Tanggal Pengajuan (Shadcn Date Picker) */}
+            {/* Tanggal Pengajuan */}
             <div className="flex flex-col gap-2">
               <label className="flex items-center text-sm font-medium text-gray-700">
                 <CalendarIcon size={18} className="mr-2 text-gray-500" /> Tanggal
@@ -152,11 +151,13 @@ export default function AjukanLaporan() {
                     variant={"ghost"}
                     className={cn(
                       "w-full justify-start text-left font-normal border-b border-gray-300 rounded-none px-0 py-2 h-auto hover:bg-transparent shadow-none text-gray-800",
-                      !form.tanggal && "text-gray-400"
+                      // PERBAIKAN 4: Cek form.tanggal_pengajuan
+                      !form.tanggal_pengajuan && "text-gray-400"
                     )}
                   >
-                    {form.tanggal ? (
-                      format(new Date(form.tanggal), "PPP")
+                    {/* PERBAIKAN 5: Tampilkan form.tanggal_pengajuan */}
+                    {form.tanggal_pengajuan ? (
+                      format(new Date(form.tanggal_pengajuan), "PPP")
                     ) : (
                       <span>Pilih tanggal</span>
                     )}
@@ -165,8 +166,10 @@ export default function AjukanLaporan() {
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={form.tanggal ? new Date(form.tanggal) : undefined}
+                    // PERBAIKAN 6: Bind ke form.tanggal_pengajuan
+                    selected={form.tanggal_pengajuan ? new Date(form.tanggal_pengajuan) : undefined}
                     onSelect={handleDateSelect}
+                    disabled={(date) => date > new Date()}
                     initialFocus
                   />
                 </PopoverContent>
@@ -174,7 +177,7 @@ export default function AjukanLaporan() {
             </div>
           </div>
 
-          {/* Row 2: Permasalahan */}
+          {/* Permasalahan */}
           <div className="flex flex-col gap-2">
             <label className="flex items-center text-sm font-medium text-gray-700">
               <AlertTriangle size={18} className="mr-2 text-gray-500" />{" "}
@@ -191,7 +194,7 @@ export default function AjukanLaporan() {
             />
           </div>
 
-          {/* Row 3: Deskripsi */}
+          {/* Deskripsi */}
           <div className="flex flex-col gap-2">
             <label className="flex items-center text-sm font-medium text-gray-700">
               <AlignLeft size={18} className="mr-2 text-gray-500" /> Deskripsi
@@ -207,7 +210,7 @@ export default function AjukanLaporan() {
             />
           </div>
 
-          {/* Messages */}
+          {/* Messages & Buttons */}
           {successMsg && (
             <div className="p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
               {successMsg}
@@ -219,7 +222,6 @@ export default function AjukanLaporan() {
             </div>
           )}
 
-          {/* Buttons */}
           <div className="flex gap-4 pt-2">
             <button
               type="submit"

@@ -18,6 +18,7 @@ interface Ticket {
   deskripsi?: string;
   status?: string;
   created_at?: string;
+  tanggal_pengajuan?: string;
 }
 
 interface DataTableProps {
@@ -127,7 +128,7 @@ export default function DataTable({
                   {renderStatusBadge(row.status || "Pengajuan")}
                 </TableCell>
                 <TableCell className="text-center text-gray-500 font-medium">
-                  {row.created_at ? row.created_at.split('T')[0] : "2025-07-09"}
+                  {row.tanggal_pengajuan ? new Date(row.tanggal_pengajuan).toLocaleDateString() : "2025-07-09"}
                 </TableCell>
                 <TableCell className="text-center">
                   <Button 
