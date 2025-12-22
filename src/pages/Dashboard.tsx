@@ -41,14 +41,15 @@ export default function Dashboard() {
       } catch (err) {
         console.error(err);
         // Fallback Data
-        setTickets([
-            { id: 1, resi: "#TCK-1021", masalah: "Login gagal pada aplikasi", category: "Hardware", status: "Selesai", created_at: "2025-07-01" },
-            { id: 2, resi: "#TCK-1022", masalah: "Server down saat akses", category: "Software", status: "Proses", created_at: "2025-07-05" },
-            { id: 3, resi: "#TCK-1023", masalah: "Printer tidak terdeteksi", category: "IT Support", status: "Selesai", created_at: "2025-07-09" },
-            { id: 4, resi: "#TCK-1024", masalah: "Wifi lambat di gedung A", category: "Hardware", status: "Pengajuan", created_at: "2025-07-10" },
-            { id: 5, resi: "#TCK-1025", masalah: "Lupa password email", category: "Cloud Services", status: "Pengajuan", created_at: "2025-07-12" },
-            { id: 6, resi: "#TCK-1026", masalah: "Layar monitor blank", category: "Hardware", status: "Pengajuan", created_at: "2025-07-15" },
-        ]);
+        // setTickets([
+        //     { id: 1, resi: "#TCK-1021", masalah: "Login gagal pada aplikasi", category: "Hardware", status: "Selesai", created_at: "2025-07-01" },
+        //     { id: 2, resi: "#TCK-1022", masalah: "Server down saat akses", category: "Software", status: "Proses", created_at: "2025-07-05" },
+        //     { id: 3, resi: "#TCK-1023", masalah: "Printer tidak terdeteksi", category: "IT Support", status: "Selesai", created_at: "2025-07-09" },
+        //     { id: 4, resi: "#TCK-1024", masalah: "Wifi lambat di gedung A", category: "Hardware", status: "Pengajuan", created_at: "2025-07-10" },
+        //     { id: 5, resi: "#TCK-1025", masalah: "Lupa password email", category: "Cloud Services", status: "Pengajuan", created_at: "2025-07-12" },
+        //     { id: 6, resi: "#TCK-1026", masalah: "Layar monitor blank", category: "Hardware", status: "Pengajuan", created_at: "2025-07-15" },
+        // ]);
+        setTickets([]);
       } finally {
         setLoading(false);
       }

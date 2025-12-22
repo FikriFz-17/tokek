@@ -16,6 +16,7 @@ export async function createTicket(ticket: any) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(ticket),
+    credentials: "include",
   });
   if (!res.ok) {
     const txt = await res.text();
@@ -25,7 +26,11 @@ export async function createTicket(ticket: any) {
 }
 
 export async function getTickets(skip = 0, limit = 100) {
-  const res = await fetch(`${API_BASE}/tickets?skip=${skip}&limit=${limit}`);
+  // Tambahkan parameter kedua fetch: { credentials: "include" }
+  const res = await fetch(`${API_BASE}/tickets?skip=${skip}&limit=${limit}`, {
+    credentials: "include" // WAJIB ADA agar Backend tahu siapa user yang login
+  });
+  
   if (!res.ok) throw new Error("Gagal mengambil tickets");
   return res.json();
 }
@@ -45,6 +50,7 @@ export async function updateTicketStatus(id: number, status: string) {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
+    credentials: "include",
   });
   if (!res.ok) throw new Error("Gagal update status");
   return res.json();
